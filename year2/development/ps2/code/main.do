@@ -21,9 +21,10 @@ set more off
 set graphics off
 set scheme plotplainblind
 
-local name jun
+local name zach
 if "`name'"=="zach" {
-	global main "/Users/zachkuloszewski/Desktop/Classes/Second Year/Development/Q1/psets/ps2"
+	global main "/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents"
+	global main $main/GitHub/phd_psets/year2/development/ps2
 }
 if "`name'"=="jun" {
 	global main "/Users/junwong/Dropbox/Second Year/Glennerster - RCT/Assignments"
@@ -41,7 +42,7 @@ set sortseed 10312022
 gen rand = runiform()
 
 gsort rand
-gen rand_id = _n
+gen   rand_id = _n
 
 * calculate number of misfits
 local n_mf = mod(_N, 4)
@@ -55,9 +56,7 @@ forval i=1/4 {
 * select misfit treatment
 replace treatment = floor(runiform()*4) if _n > _N - `n_mf'
 
-
-* randtreat package
-// randtreat, gen(treatment2) multiple(4) misfits(global)
+drop rand rand_id
 
 *********************** Problem 1.3 - Balance Table ****************************
 
@@ -70,8 +69,8 @@ gen in_school = (still_in_school == 1) * 100
 * highest class passed variable
 gen years_passed = highest_class_passed 
 replace years_passed = . if inlist(highest_class_passed, 50, 51)  
-//rebecca said that this is fine; one could also replace as zero 
-//if these don't count as formal education 
+// note: rebecca said that this is fine; one could also replace as zero 
+// if these don't count as formal education 
 
 * find locals
 qui count
@@ -128,10 +127,10 @@ file close des
 
 * stratify by unionID with 2:2:1:1 ratio 
 // (consistent with above with control being t=1 & empowerment t=2)
-randtreat, generate(strat_treatment) strata(unionID) misfits(strata) unequal(1/3 1/3 1/6 1/6)
+randtreat, generate(strat_treatment) strata(unionID) misfits(strata) ///
+		   unequal(1/3 1/3 1/6 1/6)	
+		   
 replace strat_treatment=strat_treatment + 1 
-
-// todo: do this manually as a check
 
 *********************** Problem 1.5 - Balance Table ****************************
 
@@ -188,7 +187,7 @@ file close des
 ************************ Problem 2.2 Testing Survey ****************************
 
 * sample five IDs in each treatment arm (presumably from the stratified?)
-drop rand rand_id 
+cap drop rand rand_id 
 bys strat_treatment: gen rand = runiform()
 gsort unionID rand
 bys strat_treatment: gen rand_id = _n

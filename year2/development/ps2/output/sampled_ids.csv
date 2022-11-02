@@ -1,0 +1,21 @@
+memberID,HHID,villageID,unionID,upazilaID,districtID,relationship_hh_head,sex,bl_age_reported,marital_status,highest_class_passed,still_in_school,employment_status,randomization_sample,treatment,ever_married,in_school,years_passed,strat_treatment,rand,rand_id
+3805588002703,38055880027,3805588,3805,38,78,Son/Daughter,Female,16,Never married,Class Nine,Yes,Unemployed,Yes,4,0,100,9,1,.6643558577826961,1
+6983147003503,69831470035,6983147,6983,69,6,Son/Daughter,Female,15,Never married,Class Five,No,Unemployed,Yes,3,0,0,5,1,.6113442451059071,2
+327544021005,3275440210,327544,327,3,6,Son/Daughter,Female,17,Never married,Class Seven,No,Unemployed,Yes,3,0,0,7,1,.2187769080139071,3
+6923263029602,69232630296,6923263,6923,69,6,Son/Daughter,Female,15,Never married,No Class Passed,No,Unemployed,Yes,2,0,0,0,1,.1580680067523857,4
+367504001804,3675040018,367504,367,3,6,Son/Daughter,Female,16,Never married,Class Five,No,Unemployed,Yes,4,0,0,5,1,.6009707991113719,5
+1855188015503,18551880155,1855188,1855,18,9,Son/Daughter,Female,17,Never married,Hafezi/Religious education,No,Unemployed,Yes,1,0,0,,2,.4933266294921678,1
+6983471007904,69834710079,6983471,6983,69,6,Son/Daughter,Female,15,Never married,Class Five,No,Unemployed,Yes,4,0,0,5,2,.5578614678732406,2
+1894466070003,18944660700,1894466,1894,18,9,Son/Daughter,Female,16,Never married,Class Five,No,Unemployed,Yes,3,0,0,5,2,.4891147706423501,3
+1865375029903,18653750299,1865375,1865,18,9,Son/Daughter,Female,16,Never married,Class Four,No,Unemployed,Yes,3,0,0,4,2,.9490692207938251,4
+6971122000705,69711220007,6971122,6971,69,6,Son/Daughter,Female,15,Never married,Class Nine,Yes,Unemployed,Yes,2,0,100,9,2,.189084829997998,5
+6911175013603,69111750136,6911175,1865,69,6,Son/Daughter,Female,15,Never married,Class Five,No,Unemployed,Yes,1,0,0,5,3,.6244728939496934,1
+313425087903,3134250879,313425,313,3,6,Son/Daughter,Female,17,Never married,Class Five,No,Unemployed,Yes,2,0,0,5,3,.0120660601678216,2
+381234039804,3812340398,381234,381,3,6,Son/Daughter,Female,15,Never married,Class Nine,Yes,Unemployed,Yes,1,0,100,9,3,.6912143584203924,3
+1814469007902,18144690079,1814469,1814,18,9,Son/Daughter,Female,15,Never married,Class Five,Yes,Unemployed,Yes,2,0,100,5,3,.7932245714840974,4
+9520222001206,95202220012,9520222,9520,95,78,Spouse of Son/Daughter,Female,17,Currently married,Class Six,No,Unemployed,Yes,2,100,0,6,3,.1035564258473437,5
+1851422015403,18514220154,1851422,1887,18,9,Son/Daughter,Female,16,Never married,SSC/Equivalent,Yes,Unemployed,Yes,2,0,100,10,4,.4311537952574246,1
+6923036044502,69230360445,6923036,6923,69,6,Son/Daughter,Female,16,Never married,Class Nine,Yes,Unemployed,Yes,2,0,100,9,4,.0660555678260225,2
+340494045102,3404940451,340494,3877,3,6,Son/Daughter,Female,16,Never married,Class Nine,Yes,Unemployed,Yes,2,0,100,9,4,.8545983607867705,3
+6983438009203,69834380092,6983438,6983,69,6,Son/Daughter,Female,16,Never married,Class Three,Yes,Unemployed,Yes,1,0,100,3,4,.3699880204831739,4
+1855598008504,18555980085,1855598,1855,18,9,Son/Daughter,Female,15,Never married,Class Five,No,Unemployed,Yes,1,0,0,5,4,.2915471166216824,5
