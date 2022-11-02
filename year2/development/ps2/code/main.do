@@ -21,7 +21,13 @@ set more off
 set graphics off
 set scheme plotplainblind
 
-global main "/Users/zachkuloszewski/Desktop/Classes/Second Year/Development/Q1/psets/ps2"
+local name jun
+if "`name'"=="zach" {
+	global main "/Users/zachkuloszewski/Desktop/Classes/Second Year/Development/Q1/psets/ps2"
+}
+if "`name'"=="jun" {
+	global main "/Users/junwong/Dropbox/Second Year/Glennerster - RCT/Assignments"
+}
 
 * import data from Bangladesh Paper
 use "$main/data/main.dta", clear
@@ -29,6 +35,7 @@ use "$main/data/main.dta", clear
 *********************** Problem 1.2 - Randomization ****************************
 
 set seed 10312022
+set sortseed 10312022 
 
 * generate random uniform variable
 gen rand = runiform()
@@ -55,30 +62,139 @@ replace treatment = floor(runiform()*4) if _n > _N - `n_mf'
 *********************** Problem 1.3 - Balance Table ****************************
 
 * create ever married variable
-gen ever_married = (inlist(marital_status, "Currently Married", "Divorced", ///
-						   "Engaged to be married", "Separated", "Widowed"))
-						   
+gen ever_married = (marital_status != 2) * 100 //should engaged to be married count?
+
 * create still in school variable
-gen in_school = (still_in_school == "Yes")		
+gen in_school = (still_in_school == 1) * 100	
 
 * highest class passed variable
-gen years_passed = 0			   
-						  
-eststo clear
+gen years_passed = highest_class_passed 
+replace years_passed = . if inlist(highest_class_passed, 50, 51)  
+//rebecca said that this is fine; one could also replace as zero 
+//if these don't count as formal education 
 
-local vars bl_age_reported in_school years_passed
+* find locals
+qui count
+local n_tot : di %9.0fc `r(N)'
 
-gsort treatment
-eststo: estpost tabstat `vars', by(treatment) s(mean sd n) listwise ///
-	columns(statistics)
+lab var ever_married "Ever Married (\%)"
+lab var in_school "Still in-school (\%)"
+lab var years_passed "Highest Class Passed"
 
-esttab est1 using $main/output/table1_means.tex, main(mean) aux(sd) unstack ///
-	nomti nonum l replace
-stop
-* construct balance table
-eststo clear 
-eststo: estpost ttest `covars', by(T)
-esttab using $main/output/table1_balance.tex, ///
-	cells("mu_1(fmt(3)) mu_2(fmt(3)) b(fmt(3)) sd(fmt(3)) p(fmt(3)) ") ///
-	nonum collab("No Project" "Eskom Project" "Difference" "p-Value") ///
-	eqlabels(none) replace
+foreach var in ever_married in_school years_passed {
+	
+	qui summarize `var'
+	local `var'_m : di %9.1fc `r(mean)'
+	local `var'_sd : di %9.1fc `r(sd)'
+	
+	local `var'labs : variable label `var'
+	
+	forvalues t=1/4 { // let 1 be control 
+		qui count if treatment==`t'
+		local n_`t' : di %9.0fc `r(N)'
+		
+		qui summarize `var' if treatment==`t'
+		local `var'_`t'_m : di %9.1fc `r(mean)'
+		local `var'_`t'_sd : di %9.1fc `r(sd)'
+		
+		if `t'>1 {
+			local `var'_`t'_d = ``var'_`t'_m' - ``var'_1_m '
+			local `var'_`t'_d : di %9.1fc ``var'_`t'_d'
+		}
+	}	
+}
+
+* fill balance table	
+cap file close des
+file open des using "$main/output/baseline_balance.tex", write replace
+file write des
+file write des "\begin{tabular}{lccccccccccccc}" _n
+file write des "\\" _n
+file write des "\toprule" _n 
+file write des " & \multicolumn{3}{c}{Empowerment} & \multicolumn{3}{c}{Incentive} & \multicolumn{3}{c}{Empow.+Incen.} & \multicolumn{2}{c}{Control} & \multicolumn{2}{c}{Total} \\" _n
+file write des " & \multicolumn{3}{c}{N=`n_2'} & \multicolumn{3}{c}{N=`n_3'} & \multicolumn{3}{c}{N=`n_4'} & \multicolumn{2}{c}{N=`n_1'} & \multicolumn{2}{c}{N=`n_tot'} \\" _n  
+file write des "\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-12} \cmidrule(lr){13-14}" _n 
+file write des " & Mean & SD & Diff & Mean & SD & Diff & Mean & SD & Diff & Mean & SD & Mean & SD \\" _n 
+file write des "\midrule" _n 
+foreach var of varlist ever_married in_school years_passed  {
+	file write des "``var'labs' & ``var'_2_m' & ``var'_2_sd' & ``var'_2_d' & ``var'_3_m' & ``var'_3_sd' & ``var'_3_d' & ``var'_4_m' & ``var'_4_sd' & ``var'_4_d' & ``var'_1_m' & ``var'_1_sd'  & ``var'_m' & ``var'_sd' \\" _n 
+}
+file write des "\bottomrule" _n 
+file write des "\end{tabular} " _n
+file close des
+
+
+****************** Problem 1.4 - Stratified Randomization **********************
+
+* stratify by unionID with 2:2:1:1 ratio 
+// (consistent with above with control being t=1 & empowerment t=2)
+randtreat, generate(strat_treatment) strata(unionID) misfits(strata) unequal(1/3 1/3 1/6 1/6)
+replace strat_treatment=strat_treatment + 1 
+
+// todo: do this manually as a check
+
+*********************** Problem 1.5 - Balance Table ****************************
+
+* find locals
+qui count
+local n_tot : di %9.0fc `r(N)'
+
+lab var ever_married "Ever Married (\%)"
+lab var in_school "Still in-school (\%)"
+lab var years_passed "Highest Class Passed"
+
+foreach var in ever_married in_school years_passed {
+	
+	qui summarize `var'
+	local `var'_m : di %9.1fc `r(mean)'
+	local `var'_sd : di %9.1fc `r(sd)'
+	
+	local `var'labs : variable label `var'
+	
+	forvalues t=1/4 { // let 1 be control 
+		qui count if strat_treatment==`t'
+		local n_`t' : di %9.0fc `r(N)'
+		
+		qui summarize `var' if strat_treatment==`t'
+		local `var'_`t'_m : di %9.1fc `r(mean)'
+		local `var'_`t'_sd : di %9.1fc `r(sd)'
+		
+		if `t'>1 {
+			local `var'_`t'_d = ``var'_`t'_m' - ``var'_1_m '
+			local `var'_`t'_d : di %9.1fc ``var'_`t'_d'
+		}
+	}	
+}
+
+* fill balance table	
+cap file close des
+file open des using "$main/output/stratified_balance.tex", write replace
+file write des
+file write des "\begin{tabular}{lccccccccccccc}" _n
+file write des "\\" _n
+file write des "\toprule" _n 
+file write des " & \multicolumn{3}{c}{Empowerment} & \multicolumn{3}{c}{Incentive} & \multicolumn{3}{c}{Empow.+Incen.} & \multicolumn{2}{c}{Control} & \multicolumn{2}{c}{Total} \\" _n
+file write des " & \multicolumn{3}{c}{N=`n_2'} & \multicolumn{3}{c}{N=`n_3'} & \multicolumn{3}{c}{N=`n_4'} & \multicolumn{2}{c}{N=`n_1'} & \multicolumn{2}{c}{N=`n_tot'} \\" _n  
+file write des "\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} \cmidrule(lr){11-12} \cmidrule(lr){13-14}" _n 
+file write des " & Mean & SD & Diff & Mean & SD & Diff & Mean & SD & Diff & Mean & SD & Mean & SD \\" _n 
+file write des "\midrule" _n 
+foreach var of varlist ever_married in_school years_passed  {
+	file write des "``var'labs' & ``var'_2_m' & ``var'_2_sd' & ``var'_2_d' & ``var'_3_m' & ``var'_3_sd' & ``var'_3_d' & ``var'_4_m' & ``var'_4_sd' & ``var'_4_d' & ``var'_1_m' & ``var'_1_sd'  & ``var'_m' & ``var'_sd' \\" _n 
+}
+file write des "\bottomrule" _n 
+file write des "\end{tabular}" _n
+file close des
+
+************************ Problem 2.2 Testing Survey ****************************
+
+* sample five IDs in each treatment arm (presumably from the stratified?)
+drop rand rand_id 
+bys strat_treatment: gen rand = runiform()
+gsort unionID rand
+bys strat_treatment: gen rand_id = _n
+keep if rand_id <= 5
+export delimited "$main/output/sampled_ids.csv", replace 
+
+* then we have to take the survey 
+
+
