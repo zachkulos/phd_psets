@@ -21,7 +21,7 @@ set more off
 set graphics off
 set scheme plotplainblind
 
-local name zach
+local name jun
 if "`name'"=="zach" {
 	global main "/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents"
 	global main $main/GitHub/phd_psets/year2/development/ps2
@@ -186,10 +186,13 @@ file close des
 
 ************************ Problem 2.2 Testing Survey ****************************
 
+* generate in_sample as all unmarried girls
+gen in_sample = ever_married==0
+
 * sample five IDs in each treatment arm (presumably from the stratified?)
 cap drop rand rand_id 
-bys strat_treatment: gen rand = runiform()
-gsort unionID rand
+bys strat_treatment: gen rand = runiform() if in_sample==1 
+gsort strat_treatment rand
 bys strat_treatment: gen rand_id = _n
 keep if rand_id <= 5
 export delimited "$main/output/sampled_ids.csv", replace 
