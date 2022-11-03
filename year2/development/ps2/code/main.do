@@ -198,7 +198,14 @@ keep if rand_id <= 5
 export delimited "$main/output/sampled_ids.csv", replace quote dataf
 
 * summarize results from our survey
+import delimited "$main/output/sampled_ids.csv", clear varn(1) 
+keep memberid strat_treatment
+tempfile treat_key
+save "`treat_key'", replace 
+
 import delimited "$main/data/Assignment2Q2_WIDE.csv", clear varn(1) 
+ren id_number memberid 
+merge 1:1 memberid using "`treat_key'", nogen 
 
 gen is_married = (marital_status==2)* 100
 replace currently_in_school = currently_in_school * 100
@@ -206,7 +213,13 @@ replace currently_in_school = currently_in_school * 100
 lab var is_married "Married at Endline (%)"
 lab var currently_in_school "Enrolled at Endline (%)"
 
+gen treat = "Control" if strat_treatment==1
+replace treat = "Empowerment" if strat_treatment==2 
+replace treat = "Empow.+Incen." if strat_treatment==3 
+replace treat = "Incentive" if strat_treatment==4
+encode treat, gen(streat)
+
 * let's make a cute graph
-ciplot is_married currently_in_school
+ciplot is_married currently_in_school, by(treat)
 gr export "$main/output/endline_plot.pdf", replace 
 
