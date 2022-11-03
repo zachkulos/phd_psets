@@ -195,8 +195,18 @@ bys strat_treatment: gen rand = runiform() if in_sample==1
 gsort strat_treatment rand
 bys strat_treatment: gen rand_id = _n
 keep if rand_id <= 5
-export delimited "$main/output/sampled_ids.csv", replace 
+export delimited "$main/output/sampled_ids.csv", replace quote dataf
 
-* then we have to take the survey 
+* summarize results from our survey
+import delimited "$main/data/Assignment2Q2_WIDE.csv", clear varn(1) 
 
+gen is_married = (marital_status==2)* 100
+replace currently_in_school = currently_in_school * 100
+
+lab var is_married "Married at Endline (%)"
+lab var currently_in_school "Enrolled at Endline (%)"
+
+* let's make a cute graph
+ciplot is_married currently_in_school
+gr export "$main/output/endline_plot.pdf", replace 
 
