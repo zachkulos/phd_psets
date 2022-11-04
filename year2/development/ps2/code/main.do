@@ -21,7 +21,7 @@ set more off
 set graphics off
 set scheme plotplainblind
 
-local name jun
+local name zach
 if "`name'"=="zach" {
 	global main "/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents"
 	global main $main/GitHub/phd_psets/year2/development/ps2
