@@ -1,4 +1,4 @@
-function [inds, weights] = interp_states(state, action_ind, S, A)
+function [inds, weights] = interp_actions(state, action_ind, S, A)
     
     next_state = state-A(action_ind);
     next_state(next_state < 0) = 0;

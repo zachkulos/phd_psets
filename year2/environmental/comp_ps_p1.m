@@ -33,7 +33,7 @@ nA = numel(A);
 %% part 1c - define utility of extraction
 
 % pick utility function of interest
-u_fun_flag = 1; % choose 1 or 2
+u_fun_flag = 2; % choose 1 or 2
 
 if u_fun_flag == 1
     u = @(x) 2*x.^0.5;
@@ -92,17 +92,17 @@ C_hist = nan(N,1000);
 n_iter = 0;
 
 V     = repelem(0,N)';
-Vold  = V;
+
 Vnext = nan(N,nA);
 
 while error > error_tol
     
     % count number iterations
     n_iter = n_iter + 1;
+    Vold  = V;
 
     Vnext = zeros(N,nA);
     for k=1:nA %looping thru action space
-        %Vnext(:,k) = T(:,1+(k-1)*N:k*N)*U(:,k);
         Vnext(:,k) = T(:,1+(k-1)*N:k*N)*V;
     end
 
@@ -115,10 +115,6 @@ while error > error_tol
 
     error = max(abs(V-Vold));
 
-    Vold = V;
-
-%     U    = Vnext;
-
 end
 
 %% part 1h - find optimal transition matrix
@@ -127,7 +123,7 @@ end
 Topt = zeros(N,nA);
 
 for i=1:N
-    Topt(i, C_hist(i,1)) = 1;
+    Topt(i, C_hist(i,n_iter)) = 1;
 end
 
 %% part 1i - simulate for t periods
@@ -153,8 +149,6 @@ for i=1:80
     
 end
 
-% save(['part1_values_u' num2str(u_fun_flag)],"C_hist","V_hist","S_hist");
-
 %% part 1j - plots
 
 figure;
@@ -169,7 +163,7 @@ elseif u_fun_flag == 2
     u_txt = "5y - 0.05y^2$";
 end
 
-title(strcat("Extraction Level and Price Simulations, $u=", u_txt), ...
+title(strcat("Linear State Space Simulations, $u=", u_txt), ...
     'Interpreter','latex');
 
 saveas(gcf, ['figures/part1j_u' num2str(u_fun_flag) '.png']);
