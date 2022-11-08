@@ -13,6 +13,7 @@ clear; clc;
 cd '/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents/';
 cd 'GitHub/phd_psets/year2/environmental';
 addpath(genpath('figures'));
+addpath(genpath('functions'));
 
 %% Problem 1
 % Solving the DDP by value function iteration; discrete state space.
@@ -32,7 +33,7 @@ nA = numel(A);
 %% part 1c - define utility of extraction
 
 % pick utility function of interest
-u_fun_flag = 2; % choose 1 or 2
+u_fun_flag = 1; % choose 1 or 2
 
 if u_fun_flag == 1
     u = @(x) 2*x.^0.5;
@@ -90,8 +91,8 @@ C_hist = nan(N,1000);
 % iteration counter
 n_iter = 0;
 
-Vold = repelem(-Inf,N);
-
+V     = repelem(0,N)';
+Vold  = V;
 Vnext = nan(N,nA);
 
 while error > error_tol
@@ -99,12 +100,14 @@ while error > error_tol
     % count number iterations
     n_iter = n_iter + 1;
 
+    Vnext = zeros(N,nA);
     for k=1:nA %looping thru action space
-        Vnext(:,k) = T(:,1+(k-1)*N:k*N)*U(:,k);
+        %Vnext(:,k) = T(:,1+(k-1)*N:k*N)*U(:,k);
+        Vnext(:,k) = T(:,1+(k-1)*N:k*N)*V;
     end
 
     % grab optimized value and action column
-    [V, C] = max(U + delta * Vnext,[],2);
+    [V, C] = max(U + delta .* Vnext,[],2);
 
     % store values and choices
     V_hist(:,n_iter) = V;
@@ -113,7 +116,8 @@ while error > error_tol
     error = max(abs(V-Vold));
 
     Vold = V;
-    U    = Vnext;
+
+%     U    = Vnext;
 
 end
 
@@ -149,7 +153,7 @@ for i=1:80
     
 end
 
-save(['part1_values_u' num2str(u_fun_flag)],"C_hist","V_hist","S_hist");
+% save(['part1_values_u' num2str(u_fun_flag)],"C_hist","V_hist","S_hist");
 
 %% part 1j - plots
 

@@ -13,6 +13,7 @@ clear; clc;
 cd '/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents/';
 cd 'GitHub/phd_psets/year2/environmental';
 addpath(genpath('figures'));
+addpath(genpath('functions'));
 
 %% Problem 2
 % Interpolating the state space
@@ -52,3 +53,43 @@ flow_UT = triu(infs,1);
 U   = U + flow_UT;
 
 %% part 2b - define interpolated transition matrix
+
+% identify state in next period
+% init matrix w same dimension as flow utility
+transition = nan(N,nA);
+
+for i=1:N % iter through rows
+    for j=1:nA % iter through columns
+        if j > i % if extracting more than full stock
+            transition(i,j) = 1;
+        else
+            transition(i,j) = i-j+1;
+        end
+    end
+end
+
+% state transition matrix
+T = nan(N,N*nA);
+rows = 1:501;
+
+for k=1:nA
+%     inds = S - A(k);
+%     inds(inds<=0) = 1;
+
+    inds = zeros(N,2);
+    wts  = zeros(N,2);
+    
+    %here we need to find the weights
+    for i=1:N
+        [inds(i,:),wts(i,:)] = interp_states(S(i),k,S,A);
+    end
+
+    inds_stack = [inds(:,1); inds(:,2)];
+    wts_stack  = [wts(:,1) ; wts(:,2)];
+    rows_stack = [rows; rows];
+
+    T(:,1+(k-1)*N:k*N) = sparse(rows_stack(wts_stack > 0),inds_stack(wts_stack > 0), ...
+        wts_stack(wts_stack > 0),N,nA);
+end
+
+T = sparse(T);
