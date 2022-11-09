@@ -92,7 +92,7 @@ end
 
 T = sparse(T);
 
-%% part 2c - solve da model
+%% part 2c - solve the model
 
 % init parameters
 error     = 1e12;
@@ -131,7 +131,7 @@ while error > error_tol
 
 end
 
-%% part 2d - simulate da model
+%% part 2d - simulate the model
 
 % find optimal transition matrix
 Topt = zeros(N,nA);

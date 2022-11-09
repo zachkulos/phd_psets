@@ -15,7 +15,8 @@ cd 'GitHub/phd_psets/year2/environmental';
 addpath(genpath('figures'));
 addpath(genpath('functions'));
 
-%% Problem 3 - Drilling and Real Options
+%% Problem 3 
+% Drilling and Real Options
 
 %% Part 3a - Set up the state space
 
@@ -100,7 +101,7 @@ end
 close all;
 figure; 
 plot(V);
-xlabel('Period');
+xlabel('State');
 ylabel('Value');
 title('Converged Estimate of Value Function');
 
