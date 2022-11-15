@@ -35,11 +35,23 @@ use "$main/data/WTP_waterfilter_data.dta", clear
 
 * distribution of BDM bids histogram
 twoway hist bdm_filt_bid if BDM == 1
-graph export "$main/output/BDM_bid_hist.pdf", replace
+graph export "$main/output/BDM_bid_hist.png", replace
 
-* distribution of BDM bids histogram
-twoway hist tioli_filt_price if TIOLI== 1
-graph export "$main/output/TIOLI_price_hist.pdf", replace
+* create density of prices offered in TIOLI
+gsort tioli_filt_price
+by tioli_filt_price: egen tioli_price_dens = count(tioli_filt_price)
+
+qui count if TIOLI == 1
+replace tioli_price_dens = tioli_price_dens/r(N) if TIOLI == 1
+
+* distribution of TIOLI price histogram
+preserve
+gcollapse (lastnm) tioli_price_dens, by(tioli_filt_price)
+
+twoway bar tioli_price_dens tioli_filt_price, ytitle("Fraction Offered")
+graph export "$main/output/TIOLI_price_hist.png", replace
+
+restore
 
 *************************** question 5 part 4 **********************************
 
@@ -56,22 +68,29 @@ label var tioli_filt_buy "Fraction Bought"
 twoway line tioli_filt_buy tioli_filt_price, ///
 	ylabel(, format(%5.1f)) title("TIOLI Inverse Demand Curve")
 	
+graph export "$main/output/TIOLI_invD.png", replace
+	
 restore
 
 ** BDM demand 
-// preserve
+preserve
 
 * restrict to BDM observations
 keep if BDM == 1
 
-gen BDM_bin = floor(bdm_filt_bid)
-keep if BDM_bin <= 10
+forval i=1(1)10 {
+	gen BDM_wtp_geq_`i' = (bdm_filt_bid >= `i')
+}
 
-gcollapse (count) bdm_filt_bid, by(BDM_bin)
+gen id = 1
 
-label var bdm_filt_bid "Quantity Bought"
+collapse (mean) BDM_wtp_geq* id
 
-twoway line bdm_filt_bid BDM_bin, ///
-	ylabel(, format(%5.1f)) title("BDM Inverse Demand Curve")
-	
-// restore
+reshape long BDM_wtp_geq_, i(id) j(price)
+label var BDM_wtp_geq_ "Fraction w/ WTP > p"
+label var price "Price"
+
+twoway line BDM_wtp_geq_ price
+graph export "$main/output/BDM_invD.png", replace
+
+restore 

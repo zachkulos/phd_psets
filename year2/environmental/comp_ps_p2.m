@@ -34,12 +34,14 @@ nA    = numel(A);
 % define utility of extraction
 
 % pick utility function of interest
-u_fun_flag = 2; % choose 1 or 2
+u_fun_flag = 1; % choose 1 or 2
 
 if u_fun_flag == 1
-    u = @(x) 2*x.^0.5;
+    u       = @(x) 2*x.^0.5;
+    u_prime = @(x) x.^(-0.5);
 elseif u_fun_flag == 2
-    u = @(x) 5*x-0.05*x.^2;
+    u       = @(x) 5*x-0.05*x.^2;
+    u_prime = @(x) 5-0.1*x;
 end
 
 % define flow utility matrix
@@ -145,9 +147,10 @@ t      = 80;
 st     = S_tot;
 
 % init storage for output
-V_hist = nan(t,1);
-C_hist = nan(t,1);
-S_hist = nan(t,1);
+V_hist = nan(t,1); % value function
+C_hist = nan(t,1); % extraction
+S_hist = nan(t,1); % state
+P_hist = nan(t,1); % price
 
 for i=1:80
 
@@ -166,13 +169,18 @@ for i=1:80
     S_hist(i) = st;
     C_hist(i) = action;
     V_hist(i) = u(action);
+    if action > 0
+        P_hist(i) = u_prime(action);
+    else
+        P_hist(i) = nan;
+    end
     
 end
 
 %% part 2e - plots
 
 figure;
-plot([V_hist, C_hist]);
+plot([P_hist, C_hist]);
 legend("Price", "Extraction", Location="northeast");
 legend box off
 xlabel("Period")
