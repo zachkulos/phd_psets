@@ -21,7 +21,7 @@ set more off
 // set graphics off
 set scheme plotplainblind
 
-local name zach
+local name jun
 if "`name'"=="zach" {
 	global main "/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents"
 	global main $main/GitHub/phd_psets/year2/development/ps3
@@ -51,7 +51,19 @@ program reg_sim, eclass
 	gsort rand
 	gen   rand_id = _n
 	
-	gen treat = (rand_id > 0.5*_N)
+	if `clust_flag'==0 {
+		gen treat = (rand_id > 0.5*_N)
+	}
+	else if `clust_flag' == 1 {
+		egen cohort = cut(rand), group(4) 
+		drop rand rand_id
+		gen rand = . 
+		bys cohort: replace rand = cond(_n==1, runiform(), rand[1])
+		gsort rand 
+		gen rand_id = _n
+		gen treat = (_n <= _N / 2)
+	}
+	
 	gen yi = alpha + beta*treat + eps
 	
 	label var treat "Treatment"
@@ -61,6 +73,7 @@ program reg_sim, eclass
 	
 	if `clust_flag' == 0 {
 		eststo: reg yi treat
+	}
 	else if `clust_flag' == 1 {
 		eststo: reg yi treat, vce(cluster cohort)
 	}
@@ -112,4 +125,8 @@ twoway line reject_rate sample_size, ytitle("Power (Rejection Rate)") ///
 graph export "$main/output/q1_4.png", replace
 
 *********************** Problem 1.5 - Clustering *******************************
+clear 
+simulate _b _se, reps(100): reg_sim `N' 1
 
+gen tstat  = _b_treat / _se_treat
+gen reject = ((tstat >= 1.96) | (tstat <= -1.96))
