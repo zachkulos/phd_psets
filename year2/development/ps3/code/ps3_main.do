@@ -40,6 +40,9 @@ set sortseed 20221115
 program reg_sim, eclass
 	args n_obs clust_flag 
 	drop _all 
+	
+	local n_obs 200
+	local clust_flag 1
 	set obs `n_obs'
 	gen id = _n 
 	gen alpha = 70
@@ -55,7 +58,7 @@ program reg_sim, eclass
 		gen treat = (rand_id > 0.5*_N)
 	}
 	else if `clust_flag' == 1 {
-		egen cohort = cut(rand), group(4) 
+		egen cohort = cut(rand_id), group(4) 
 		drop rand rand_id
 		gen rand = . 
 		bys cohort: replace rand = cond(_n==1, runiform(), rand[1])
@@ -75,7 +78,7 @@ program reg_sim, eclass
 		eststo: reg yi treat
 	}
 	else if `clust_flag' == 1 {
-		eststo: reg yi treat, vce(cluster cohort)
+		eststo: reg yi treat , vce(cluster cohort)
 	}
 end
 
@@ -96,9 +99,9 @@ simulate _b _se, reps(100): reg_sim `N' 0
 
 gen tstat  = _b_treat / _se_treat
 gen reject = ((tstat >= 1.96) | (tstat <= -1.96))
+sum reject 
 
 *********************** Problem 1.4 - Varying Sample Size **********************
-
 tempname memhold
 tempfile results
 
@@ -127,6 +130,19 @@ graph export "$main/output/q1_4.png", replace
 *********************** Problem 1.5 - Clustering *******************************
 clear 
 simulate _b _se, reps(100): reg_sim `N' 1
-
 gen tstat  = _b_treat / _se_treat
-gen reject = ((tstat >= 1.96) | (tstat <= -1.96))
+
+tempname memhold 
+tempfile results 
+postfile `memhold' pval using `results', replace
+
+levelsof tstat, local(ts)
+foreach t of local ts {
+	local pval = 2 * ttail(3, `t')
+	post `memhold' (`pval')
+}
+postclose `memhold'
+use `results', clear
+gen reject = (pval <= 0.05)
+sum reject
+
