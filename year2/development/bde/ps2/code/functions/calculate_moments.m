@@ -8,7 +8,7 @@ function [g] = calculate_moments(tau_h, tau_l, p_h, ...
     g = struct;
 
     % init vector of incentives
-    inc_v = [-inc, 0 inc];
+    inc_v = [-inc 0 inc];
 
     % sub matrix for each incentive scheme
     g = nan(12,1);

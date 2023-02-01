@@ -1,11 +1,47 @@
+
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and republish this document.
+
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{color}
+
+\sloppy
+\definecolor{lightgray}{gray}{0.5}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+    
+    
+\subsection*{Contents}
+
+\begin{itemize}
+\setlength{\itemsep}{-1ex}
+   \item set directories
+   \item set baseline parameter values
+   \item Question 1.1
+   \item Question 1.2
+   \item Question 1.3
+   \item simulate data
+   \item Question 2.1
+   \item Question 2.2
+   \item Question 3
+   \item Question 4
+\end{itemize}
+\begin{verbatim}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Problem Set 2 - Behavioral Development Economics
 % Zachary Kuloszewski
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{verbatim}
 
-%% set directories
+
+\subsection*{set directories}
+
+\begin{verbatim}
 clear; clc;
 
 cd '/Users/zachkuloszewski/Dropbox/My Mac (Zachs-MBP.lan)/Documents/';
@@ -13,15 +49,18 @@ cd 'GitHub/phd_psets/year2/development/bde/ps2';
 addpath(genpath('code'));
 addpath(genpath('code/functions'));
 addpath(genpath('output'));
+\end{verbatim}
 
-%% set baseline parameter values
 
+\subsection*{set baseline parameter values}
+
+\begin{verbatim}
 % tax levels
 tau_h = 100;
 tau_l = 50;
 
 % incentive rate
-inc = 0.5; 
+inc = 0.5;
 
 % distributional parameters for respondent valuation of good
 mu_v    = 40;
@@ -33,16 +72,25 @@ sigma_s = 2;
 
 p_l = 0.001;
 p_h = 0.02;
+\end{verbatim}
 
-%% Question 1.1 
 
+\subsection*{Question 1.1}
+
+\begin{verbatim}
 % function calculates all moments analytically
 % arguments: (tau_h, tau_l, p_h, p_l, mu_v, sigma_v, mu_s, sigma_s, inc)
 m = calculate_moments(tau_h, tau_l, p_h, p_l, mu_v, sigma_v, ...
                    0, 0, 0);
+\end{verbatim}
 
-%% Question 1.2
-% plot static analytical moments
+
+\subsection*{Question 1.2}
+
+\begin{par}
+plot static analytical moments
+\end{par} \vspace{1em}
+\begin{verbatim}
 figure;
 bar(m(5:8));
 set(gca,'xticklabel', ...
@@ -52,10 +100,16 @@ title('Moments for Zero Incentive')
 
 saveas(gcf,'output/part1_1.jpeg');
 close all;
+\end{verbatim}
 
-%% Question 1.3
 
-%%% simulate data
+\subsection*{Question 1.3}
+
+
+
+\subsection*{simulate data}
+
+\begin{verbatim}
 n = 12000;
 rng(2023);
 
@@ -105,9 +159,12 @@ theta = run(gs,problem);
 
 disp('Question 1.3 Estimates')
 disp(theta);
+\end{verbatim}
 
-%% Question 2.1
 
+\subsection*{Question 2.1}
+
+\begin{verbatim}
 % function calculates all moments analytically
 % arguments: (tau_h, tau_l, p_h, p_l, mu_v, sigma_v, mu_s, sigma_s, inc)
 m = calculate_moments(tau_h, tau_l, p_h, p_l, mu_v, sigma_v, ...
@@ -175,9 +232,12 @@ theta = run(gs,problem);
 
 disp('Question 2.1 estimates:');
 disp(theta);
+\end{verbatim}
 
-%% Question 2.2
 
+\subsection*{Question 2.2}
+
+\begin{verbatim}
 % try fixing p_h and p_l, estimate mu and sigma for s and v
 % define objective function
 obj = @(theta) (calculate_moments(tau_h,tau_l,p_h,p_l,theta(1),theta(2),theta(3),theta(4),0)-h)' * ...
@@ -217,9 +277,12 @@ theta = run(gs,problem);
 
 disp('Question 2.2.ii estimates:');
 disp(theta);
+\end{verbatim}
 
-%% Question 3
 
+\subsection*{Question 3}
+
+\begin{verbatim}
 % plot static analytical moments
 figure;
 bar([m(5:8,1) m(1:4,1) m(9:end,1)]);
@@ -278,7 +341,7 @@ obj = @(theta)(calculate_moments(tau_h,tau_l,theta(1),theta(2),theta(3),...
               theta(4),theta(5),theta(6),0.5)-h);
 
 % % perform optimization
-rng default 
+rng default
 gs = GlobalSearch;
 problem = createOptimProblem('fmincon','x0',[p_l0,p_h0,mu_v0,sigma_v0,mu_s0,sigma_s0],...
     'objective',obj,'lb',[0,0.0005,20,30,0.9,1],'ub',[1,0.5,50,80,3,5]);
@@ -286,10 +349,12 @@ theta = run(gs,problem);
 
 disp('Question 3 estimates:');
 disp(theta);
+\end{verbatim}
 
 
-%% Question 4
+\subsection*{Question 4}
 
+\begin{verbatim}
 rng(2023);
 
 % generate data
@@ -370,7 +435,7 @@ mu_s0    = 0.9;
 sigma_s0 = 2.1;
 
 % perform optimization
-rng default 
+rng default
 opts = optimoptions(@fmincon,'Algorithm','sqp');
 gs = GlobalSearch('FunctionTolerance',1e-10);
 problem = createOptimProblem('fmincon','x0',[p_l0,p_h0,mu_v0,sigma_v0,mu_s0,sigma_s0],...
@@ -407,3 +472,9 @@ cov_m = diag(h .* (1-h));
 cv = (1/n) .* (inv(db' * db) * (db' * cov_m * db) * inv(db' * db));
 se = sqrt(diag(cv));
 disp(se);
+\end{verbatim}
+
+
+
+\end{document}
+
