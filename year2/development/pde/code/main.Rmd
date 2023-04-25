@@ -1,0 +1,146 @@
+---
+title: "R Spatial Assignment"
+author: "Zachary Kuloszewski"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## set paths
+```{r}
+rm(list=ls())
+
+user_path <- function() {
+  # Return a hardcoded path that depends on the current user, or the current 
+  # working directory for an unrecognized user. If the path isn't readable,
+  # stop.
+  
+user <- Sys.info()["user"]
+if (user == "zachkuloszewski"){
+    path = "/Users/zachkuloszewski/Library/CloudStorage/Dropbox/My Mac (Zachs-MBP.lan)/Documents/GitHub/phd_psets/year2/development/pde/"
+  } 
+  else if (user == ""){
+    path = ""
+  } 
+  else {
+    warning("No path found for current user (", user, ")")
+    path = getwd()
+  }
+  stopifnot(file.exists(path))
+  return(path)
+}
+```
+
+# Problem 1: Mapping Dell (2010)
+
+## part 1.i, load necessary libraries
+```{r, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(raster)
+library(rgdal)
+library(exactextractr)
+```
+
+## part 1.ii-iv, importing raw files
+```{r}
+mita_shape  <- st_read(paste0(user_path(), 
+                              "data/Dell_raw_data_files/MitaBoundary.shp"))
+peru_border <- st_read(paste0(user_path(), 
+                              "data/Dell_raw_data_files/peru_nw.shp"))
+capitals    <- st_read(paste0(user_path(), 
+                              "data/Dell_raw_data_files/locations.shp"))
+```
+
+###Part 1.v, recast district capitals
+```{r}
+capitals <- st_transform(capitals, crs(mita_shape))
+```
+
+###Part 1.vi, plot a map! 
+```{r}
+# define map theme
+map_theme <- list(theme_bw(),
+                  theme(line = element_blank(), 
+                        panel.grid.minor=element_blank(), # blank background
+                        panel.grid.major=element_blank(),
+                        axis.text.x = element_blank(),
+                        axis.text.y = element_blank(),
+                        axis.ticks = element_blank(), # turn off ticks 
+                        axis.title.x = element_blank(), # turn off titles 
+                        axis.title.y = element_blank()))
+
+# plot map
+peru_map <- ggplot() + 
+            geom_sf(data=peru_border) +
+            geom_sf(data=capitals, color="blue", size=0.3) +
+            geom_sf(data=mita_shape, color = "red") +
+            map_theme + 
+            ggtitle("Peru, Mitas, and Capital Locations")
+
+peru_map
+
+```
+
+###Part 1.vii, distance to border
+```{r}
+# calculate distance to both borders
+capitals$border_dist <- st_distance(capitals$geometry, mita_shape$geometry)
+
+# take minimum of two distances
+capitals <- capitals %>% 
+            rowwise() %>%
+            mutate(border_dist = min(border_dist[,1], border_dist[,2]))
+```
+
+###Part 1.viii, import raster of nightlights
+```{r}
+nightlights <- raster(paste0(user_path(), "data/per_viirs_100m_2012.tif"))
+```
+
+###Part 1.ix, nightlights within 5km of capitals
+```{r, warning=FALSE}
+# calculate buffer objects
+capital_buffer <- st_buffer(capitals$geometry, dist=5000)
+
+# mean within each buffer
+capitals$mean_nightlights <- exact_extract(nightlights,
+                                           capital_buffer, 
+                                           'mean')
+```
+
+###Part 1.x, mean nightlights in mita capitals
+```{r}
+mean(capitals$mean_nightlights[capitals$mita == 1 & !is.na(capitals$mita)])
+```
+
+###Part 1.xi, map everything now
+```{r}
+# define bounds in latitude and longitude to zoom in on study area
+disp_win_wgs84 <- st_sfc(st_point(c(-78,-18)), st_point(c(-68,-11)),
+                         crs = 4326)
+
+# switch to right CRS
+disp_win_wgs84 <- st_transform(disp_win_wgs84, crs = crs(capitals))
+disp_win_coord <- st_coordinates(disp_win_wgs84)
+
+# plot map
+nightlight_map <- ggplot() +
+                  geom_sf(data=peru_border) +
+                  geom_sf(data=capitals, aes(color=mean_nightlights), size=0.7) +
+                  geom_sf(data=mita_shape, color = "black") +
+                  map_theme + 
+                  ggtitle("Capitals and Nightlights") +
+                  coord_sf(xlim=disp_win_coord[,'X'], 
+                           ylim=disp_win_coord[,'Y'],
+                           datum=crs(capitals), 
+                           expand=FALSE) +
+                  scale_color_gradient(low="red", high="green")
+
+
+nightlight_map
+```
+
