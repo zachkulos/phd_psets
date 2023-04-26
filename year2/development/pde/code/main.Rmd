@@ -2,11 +2,14 @@
 title: "R Spatial Assignment"
 author: "Zachary Kuloszewski"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 80), tidy = TRUE)
 ```
 
 ## set paths
@@ -34,10 +37,11 @@ if (user == "zachkuloszewski"){
 }
 ```
 
+
 # Problem 1: Mapping Dell (2010)
 
-## part 1.i, load necessary libraries
-```{r, warning=FALSE}
+### Part 1.i, load necessary libraries
+```{r, message=FALSE}
 library(tidyverse)
 library(sf)
 library(raster)
@@ -45,8 +49,8 @@ library(rgdal)
 library(exactextractr)
 ```
 
-## part 1.ii-iv, importing raw files
-```{r}
+### Part 1.ii-iv, importing raw files
+```{r, message=FALSE, warning=FALSE}
 mita_shape  <- st_read(paste0(user_path(), 
                               "data/Dell_raw_data_files/MitaBoundary.shp"))
 peru_border <- st_read(paste0(user_path(), 
@@ -55,12 +59,12 @@ capitals    <- st_read(paste0(user_path(),
                               "data/Dell_raw_data_files/locations.shp"))
 ```
 
-###Part 1.v, recast district capitals
+### Part 1.v, recast district capitals
 ```{r}
 capitals <- st_transform(capitals, crs(mita_shape))
 ```
 
-###Part 1.vi, plot a map! 
+### Part 1.vi, plot a map! 
 ```{r}
 # define map theme
 map_theme <- list(theme_bw(),
@@ -85,7 +89,7 @@ peru_map
 
 ```
 
-###Part 1.vii, distance to border
+### Part 1.vii, distance to border
 ```{r}
 # calculate distance to both borders
 capitals$border_dist <- st_distance(capitals$geometry, mita_shape$geometry)
@@ -96,13 +100,13 @@ capitals <- capitals %>%
             mutate(border_dist = min(border_dist[,1], border_dist[,2]))
 ```
 
-###Part 1.viii, import raster of nightlights
+### Part 1.viii, import raster of nightlights
 ```{r}
 nightlights <- raster(paste0(user_path(), "data/per_viirs_100m_2012.tif"))
 ```
 
-###Part 1.ix, nightlights within 5km of capitals
-```{r, warning=FALSE}
+### Part 1.ix, nightlights within 5km of capitals
+```{r, message=FALSE}
 # calculate buffer objects
 capital_buffer <- st_buffer(capitals$geometry, dist=5000)
 
@@ -112,25 +116,32 @@ capitals$mean_nightlights <- exact_extract(nightlights,
                                            'mean')
 ```
 
-###Part 1.x, mean nightlights in mita capitals
+### Part 1.x, mean nightlights in mita capitals
 ```{r}
+# within the mita
 mean(capitals$mean_nightlights[capitals$mita == 1 & !is.na(capitals$mita)])
+
+# outside the mita
+mean(capitals$mean_nightlights[capitals$mita == 0 | is.na(capitals$mita)], 
+     na.rm=T)
 ```
 
-###Part 1.xi, map everything now
+### Part 1.xi, map everything now
 ```{r}
 # define bounds in latitude and longitude to zoom in on study area
-disp_win_wgs84 <- st_sfc(st_point(c(-78,-18)), st_point(c(-68,-11)),
+disp_win_wgs84 <- st_sfc(st_point(c(-74.5,-16.5)), st_point(c(-70.5,-13)),
                          crs = 4326)
 
 # switch to right CRS
 disp_win_wgs84 <- st_transform(disp_win_wgs84, crs = crs(capitals))
 disp_win_coord <- st_coordinates(disp_win_wgs84)
 
+capitals$ln_nightlights <- log(.1+capitals$mean_nightlights)
+
 # plot map
 nightlight_map <- ggplot() +
                   geom_sf(data=peru_border) +
-                  geom_sf(data=capitals, aes(color=mean_nightlights), size=0.7) +
+                  geom_sf(data=capitals, aes(color=ln_nightlights), size=0.7) +
                   geom_sf(data=mita_shape, color = "black") +
                   map_theme + 
                   ggtitle("Capitals and Nightlights") +
@@ -142,5 +153,47 @@ nightlight_map <- ggplot() +
 
 
 nightlight_map
+```
+
+# Problem 2: African Ethnic Groups
+
+### Part 2.i-ii, load data
+```{r, message=FALSE}
+# murdock map
+tribal_borders <- st_read(paste0(user_path(), "data/Africa/borders_tribes.shp"))
+
+# explorer routes
+explorer_rtes  <- st_read(paste0(user_path(), "data/Africa/Explorer_Routes_Final.shp"))
+```
+
+### Part 2.iii, selecting pre-colonial voyages
+```{r}
+explorer_rtes_pre_col <- filter(explorer_rtes, Year_End <= 1885 & !is.na(Year_End))
+```
+
+### Part 2.iv, identify ethnic groups with pre-colonial contact
+```{r}
+# first identify the intersections
+tribal_borders$explorers_contacted <- st_intersects(tribal_borders$geometry,
+                                                    explorer_rtes_pre_col$geometry)
+
+# then create binary based on length of intersection list
+tribal_borders <- tribal_borders %>% 
+                  rowwise() %>% 
+                  mutate(contacted = as.numeric(length(explorers_contacted) > 0))
+```
+
+### Part 2.v, map contacted groups
+```{r}
+# factorise contact variable for legend
+tribal_borders$contacted <- as.factor(tribal_borders$contacted)
+
+contact_map <- ggplot() +
+               geom_sf(data=tribal_borders, aes(fill=contacted)) +
+               geom_sf(data=explorer_rtes_pre_col) +
+               map_theme + 
+               ggtitle("Pre-Colonial Exploration and Ethnic Group Contact")
+              
+contact_map
 ```
 
